@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/sing3demons/gin-backend-api/logger"
 	"github.com/sing3demons/gin-backend-api/routes"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,7 +20,7 @@ import (
 )
 
 func connectionMongo() (db *mongo.Database, err error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://root:123456@localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +43,11 @@ func connectionMongo() (db *mongo.Database, err error) {
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
+	if gin.Mode() != gin.ReleaseMode {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Println("Error loading .env file")
+		}
 	}
 
 	logFactory := logger.NewLoggerFactory("./logs")
@@ -62,7 +66,7 @@ func main() {
 	r := routes.NewRouter(db, logger)
 
 	srv := &http.Server{
-		Addr:           ":" + port,
+		Addr:           ":" + os.Getenv("PORT"),
 		Handler:        r,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,

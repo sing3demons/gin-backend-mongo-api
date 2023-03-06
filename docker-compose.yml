@@ -11,3 +11,20 @@ services:
       - 27017:27017
     volumes:
       - ./_db:/data/db
+  app:
+    image: backend-api
+    build: .
+    container_name: backend-api
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+    environment:
+      - MONGO_URI=mongodb://root:123456@db:27017
+      - PORT=3000
+      - JWT_SECRET=123456
+      - GIN_MODE=release
+    volumes:
+      - ./logs:/home/app
+
